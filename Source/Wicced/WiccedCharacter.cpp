@@ -131,3 +131,66 @@ void AWiccedCharacter::DoJumpEnd()
 	// signal the character to stop jumping
 	StopJumping();
 }
+
+void AWiccedCharacter::EquipItem(AEquipment* NewItem, FName EquipmentSocketName)
+{
+	if (!NewItem) return;
+
+	if (!EquippedItems.IsEmpty())
+	{
+		for (AEquipment* EquippedItem : EquippedItems) {
+			if (EquippedItem->EquipmentType == NewItem->EquipmentType || NewItem->EquipmentType == EEquipmentType::BothHands) {
+				UnequipItem(EquippedItem->EquipmentType);
+			}
+		}
+	}
+
+	AEquipment* EquippedItem = NewItem;
+	EquippedItem->EquipmentMesh->SetSimulatePhysics(false);
+	EquippedItem->EquipmentMesh->SetEnableGravity(false);
+	EquippedItem->EquipmentMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	EquippedItem->SetActorEnableCollision(false);
+	EquippedItems.Add(EquippedItem);
+
+	if (GetMesh())
+	{
+		EquippedItem->EquipmentMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, EquipmentSocketName);
+	}
+
+}
+
+FEquipmentUseResult AWiccedCharacter::UseEquippedItem(EEquipmentType Type)
+{
+	if (EquippedItems.IsEmpty())
+	{
+		return FEquipmentUseResult();
+	}
+	for (AEquipment* EquippedItem : EquippedItems) {
+		if (EquippedItem->EquipmentType == Type)
+		{
+			FEquipmentUseResult Result = EquippedItem->UseEquipment(this);
+			EquipmentAimPitch = Result.AimPitch;
+			TargetLocation = Result.TargetHitLocation;
+			bUsingEquipment = Result.bHasAimTarget;
+			return Result;
+		}
+	}
+	return FEquipmentUseResult();
+}
+
+void AWiccedCharacter::UnequipItem(EEquipmentType Type)
+{
+	if (EquippedItems.IsEmpty())
+	{
+		return;
+	}
+
+	for (AEquipment* EquippedItem : EquippedItems) {
+		if (EquippedItem->EquipmentType == Type)
+		{
+			EquippedItems.Remove(EquippedItem);
+			EquippedItem->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			EquippedItem->Destroy();
+		}
+	}
+}

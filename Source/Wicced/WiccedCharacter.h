@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "Equipment.h"
 #include "WiccedCharacter.generated.h"
 
 class USpringArmComponent;
@@ -85,6 +86,30 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
+
+public:
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
+	TArray<AEquipment*> EquippedItems;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
+	bool bUsingEquipment;
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void EquipItem(AEquipment* NewItem, FName EquipmentSocketName);
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	FEquipmentUseResult UseEquippedItem(EEquipmentType Type);
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void UnequipItem(EEquipmentType Type);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Equipment")
+	float EquipmentAimPitch;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Equipment")
+	FVector TargetLocation = FVector::ZeroVector;
 public:
 
 	/** Returns CameraBoom subobject **/

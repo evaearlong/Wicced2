@@ -16,7 +16,8 @@ public class Wicced : ModuleRules
 			"EnhancedInput",
 			"AIModule",
 			"StateTreeModule",
-			"GameplayStateTreeModule",
+            "GameplayTags",
+            "GameplayStateTreeModule",
 			"UMG",
 			"Slate"
 		});
