@@ -13,6 +13,8 @@
 UCLASS()
 class WICCED_API AWand : public AEquipment
 {
+
 	GENERATED_BODY()
 	virtual FEquipmentUseResult UseEquipment_Implementation(ACharacter* User);
+
 };
