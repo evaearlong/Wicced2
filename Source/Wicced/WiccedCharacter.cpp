@@ -148,8 +148,7 @@ void AWiccedCharacter::EquipItem(AEquipment* NewItem, FName EquipmentSocketName)
 	AEquipment* EquippedItem = NewItem;
 	EquippedItem->EquipmentMesh->SetSimulatePhysics(false);
 	EquippedItem->EquipmentMesh->SetEnableGravity(false);
-	EquippedItem->EquipmentMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	EquippedItem->SetActorEnableCollision(false);
+	EquippedItem->EquipmentMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	EquippedItems.Add(EquippedItem);
 
 	if (GetMesh())
