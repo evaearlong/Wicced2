@@ -19,7 +19,8 @@ public class Wicced : ModuleRules
             "GameplayTags",
             "GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"Slate",
+			"Niagara"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

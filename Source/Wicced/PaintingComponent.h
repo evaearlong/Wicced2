@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NiagaraSystem.h"
+#include "NiagaraComponent.h"
 #include "Components/ActorComponent.h"
 #include "PaintingComponent.generated.h"
 
@@ -17,41 +19,29 @@ public:
     void FinishStroke();
 
     UFUNCTION(BlueprintCallable)
-    void InitializePainting();
-
-    UFUNCTION(BlueprintCallable)
-    void PaintAtUV(const FVector2D& CurrentUV);
+    void PaintAtLocation(const FVector& CurrentWorldPos);
 
     UFUNCTION(BlueprintCallable)
     void ChangeBrushColor(FLinearColor NewColor);
 
+    UFUNCTION(BlueprintCallable)
+    void StartNewStroke();
+
 protected:
-    FVector2D PreviousUV;
+    FVector PreviousWorldPos;
     bool bHasPrevious = false;
 
     UPROPERTY(EditAnywhere)
     float BrushSpacing = 0.005f;
 
     UPROPERTY(EditAnywhere)
+    UNiagaraSystem* PaintSystem;
+
+    UNiagaraComponent* NiagaraComp;
+
+    UPROPERTY(EditAnywhere)
     float BrushSize = 32.0f;
 
-    UPROPERTY()
-    UTextureRenderTarget2D* RenderTarget;
-
-    UPROPERTY(EditAnywhere)
-    UTexture2D* BrushTexture;
-
-    UPROPERTY(EditAnywhere)
-    UMaterialInterface* BrushMaterial;
-
-    UPROPERTY(BlueprintReadWrite)
-    UMaterialInstanceDynamic* BrushMID;
-
-    UPROPERTY(EditAnywhere)
-    UMaterialInterface* CanvasMaterial;
-
-    UPROPERTY(BlueprintReadWrite)
-    UMaterialInstanceDynamic* CanvasMID;
-
+    FLinearColor BrushColor = FLinearColor::Blue;
 
 };

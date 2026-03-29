@@ -4,104 +4,54 @@
 #include "PaintingComponent.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Engine/Canvas.h"
 
 void UPaintingComponent::FinishStroke() {
     bHasPrevious = false;
 }
 
-void UPaintingComponent::InitializePainting()
-{
-    UWorld* World = GetWorld();
-    if (!World) return;
-
-    RenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(
-        World,
-        1024,  
-        1024,  
-        RTF_RGBA8
-    );
-
-    UKismetRenderingLibrary::ClearRenderTarget2D(
-        World,
-        RenderTarget,
-        FLinearColor::White 
-    );
-
-    if (BrushMaterial)
-    {
-        BrushMID = UMaterialInstanceDynamic::Create(BrushMaterial, this);
-        BrushMID->SetVectorParameterValue("BrushColor", FLinearColor::Black);
-        BrushMID->SetScalarParameterValue("BrushSize", BrushSize);
-        BrushMID->SetTextureParameterValue("BrushTexture", BrushTexture);
-    }
-
-    if (CanvasMaterial)
-    {
-        CanvasMID = UMaterialInstanceDynamic::Create(CanvasMaterial, this);
-        CanvasMID->SetTextureParameterValue("RenderTarget", RenderTarget);
-    }
-
-}
-
 void UPaintingComponent::ChangeBrushColor(FLinearColor NewColor) {
-    if (BrushMID) {
-        BrushMID->SetVectorParameterValue("BrushColor", NewColor);
+    BrushColor = NewColor;
+
+    if (NiagaraComp)
+    {
+        NiagaraComp->SetVariableLinearColor(TEXT("User.BrushColor"), NewColor);
     }
 }
 
-void UPaintingComponent::PaintAtUV(const FVector2D& CurrentUV)
+void UPaintingComponent::StartNewStroke()
 {
-    if (!RenderTarget || !BrushMaterial) return;
-
     UWorld* World = GetWorld();
-    if (!World) return;
+    if (!World || !PaintSystem) return;
 
-    if (!bHasPrevious)
-    {
-        PreviousUV = CurrentUV;
-        bHasPrevious = true;
-    }
-
-    float Distance = FVector2D::Distance(PreviousUV, CurrentUV);
-
-    int32 Steps = FMath::Max(1, FMath::FloorToInt(Distance / BrushSpacing));
-
-    FDrawToRenderTargetContext Context;
-    UCanvas* Canvas;
-    FVector2D Size;
-
-    UKismetRenderingLibrary::BeginDrawCanvasToRenderTarget(
-        World,
-        RenderTarget,
-        Canvas,
-        Size,
-        Context
+    NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
+        PaintSystem,
+        GetOwner()->GetRootComponent(),
+        NAME_None,
+        FVector::ZeroVector,
+        FRotator::ZeroRotator,
+        EAttachLocation::KeepRelativeOffset,
+        true
     );
+    NiagaraComp->SetVariableLinearColor(TEXT("User.BrushColor"), BrushColor);
+    NiagaraComp->SetVariableFloat(TEXT("User.BrushSize"), BrushSize);
 
-    for (int32 i = 0; i <= Steps; i++)
+    bHasPrevious = false;
+}
+
+void UPaintingComponent::PaintAtLocation(const FVector& CurrentWorldPos)
+{
+    if (!NiagaraComp) return;
+
+    if (bHasPrevious)
     {
-        float Alpha = (Steps == 0) ? 0.f : (float)i / (float)Steps;
-
-        FVector2D UV = FMath::Lerp(PreviousUV, CurrentUV, Alpha);
-
-        FVector2D PixelPos = FVector2D(UV.X * Size.X, UV.Y * Size.Y);
-
-        float DrawSize = BrushSize;
-
-        FVector2D DrawPos = PixelPos - FVector2D(DrawSize * 0.5f, DrawSize * 0.5f);
-
-        Canvas->K2_DrawMaterial(
-            BrushMID,
-            DrawPos,
-            FVector2D(DrawSize, DrawSize),
-            FVector2D(0, 0),
-            FVector2D(1, 1),
-            0.0f
-        );
+        float Dist = FVector::Distance(PreviousWorldPos, CurrentWorldPos);
+        if (Dist < BrushSpacing * 0.5f) return;
     }
 
-    UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(World, Context);
+    NiagaraComp->SetVariableVec3(TEXT("User.PaintPosition"), CurrentWorldPos);
 
-    PreviousUV = CurrentUV;
+    PreviousWorldPos = CurrentWorldPos;
+    bHasPrevious = true;
 }
