@@ -52,6 +52,9 @@ void UPaintingComponent::PaintAtLocation(const FVector& CurrentWorldPos)
 
     NiagaraComp->SetVariableVec3(TEXT("User.PaintPosition"), CurrentWorldPos);
 
+    float SizeVariation = FMath::FRandRange(0.8f, 1.2f);
+    NiagaraComp->SetVariableFloat(TEXT("User.BrushSize"), BrushSize * SizeVariation);
+
     PreviousWorldPos = CurrentWorldPos;
     bHasPrevious = true;
 }
